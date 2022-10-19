@@ -28,6 +28,12 @@ interface ProportionCountry {
   }[];
 }
 
+type CsvEntry = {
+  date: string;
+  proportion: number;
+  location: string;
+}
+
 const colorStyles: Partial<Styles<any, true, any>> = {
   control: (styles: CSSPseudos) => ({ ...styles, backgroundColor: 'white' }),
   multiValue: (styles: CSSPseudos, { data }: { data: PlaceOption }) => {
@@ -195,6 +201,23 @@ export const VariantInternationalComparisonChart = ({
 
     return [...dateMap.values()].sort((a, b) => Date.parse(a.dateString) - Date.parse(b.dateString));
   }, [logScale, variantSamplesByCountry, wholeInternationalSampleSet]);
+
+  const csvData = useMemo(
+    () => {
+      const result: CsvEntry[] = [];
+      for (let d of plotData) {
+        for (let place of selectedPlaceOptions) {
+          result.push({
+            date: d.dateString,
+            proportion: d[place.value],
+            location: place.value,
+          })
+        }
+      }
+      return result;
+    },
+    [plotData, selectedPlaceOptions]
+  );
 
   const onChange = (value: any, { action, removedValue }: any) => {
     switch (action) {
