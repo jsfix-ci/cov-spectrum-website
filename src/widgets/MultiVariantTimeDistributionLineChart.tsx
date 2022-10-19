@@ -25,6 +25,14 @@ function hexToRGB(hex: string, alpha: number) {
   }
 }
 
+type CsvEntry = {
+  date: string;
+  proportion: number;
+  proportionCILow: number;
+  proportionCIHigh: number;
+  variant: string;
+}
+
 export type MultiVariantTimeDistributionLineChartProps = {
   variantSampleSets: DateCountSampleDataset[];
   wholeSampleSet: DateCountSampleDataset;
@@ -37,7 +45,7 @@ export const MultiVariantTimeDistributionLineChart = ({
   analysisMode,
 }: MultiVariantTimeDistributionLineChartProps) => {
   const [showCI, setShowCI] = useState<boolean>(true);
-  const { plotData, ticks } = useMemo(() => {
+  const { plotData, ticks, csvData } = useMemo(() => {
     // fill in dates with zero samples and merge sample sets
     const numberOfVariants = variantSampleSets.length;
     const dateMap: Map<UnifiedDay, any> = new Map();
@@ -125,7 +133,23 @@ export const MultiVariantTimeDistributionLineChart = ({
     // ticks
     const ticks = getTicks(plotData);
 
-    return { plotData, ticks };
+    // CSV data
+    const csvData: CsvEntry[] = [];
+    for (let pd of plotData) {
+      for (let i = 0; i < numberOfVariants; i++) {
+        csvData.push({
+          date: pd.date.toISOString().substring(0, 10),
+          proportion: pd[`variantProportion${i}`],
+          proportionCILow: pd[`variantProportionCILower${i}`],
+          proportionCIHigh: pd[`variantProportionCIUpper${i}`],
+          variant: pd[`variantName${i}`]
+        });
+      }
+    }
+
+    console.log(csvData);
+
+    return { plotData, ticks, csvData };
   }, [variantSampleSets, wholeSampleSet.payload, wholeSampleSet.selector.dateRange]);
 
   function getYMax(pd: typeof plotData): number {
